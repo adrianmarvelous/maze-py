@@ -1,147 +1,189 @@
 import tkinter as tk
 from tkinter import messagebox
-import time
+import numpy as np
+import random
+import pickle
 
-# Predefined single maze
+# Predefined Maze
 maze = [
-    [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,1],
-    [1,0,1,1,1,0,1,0,1,0,1,1,1,1,1,1,0,1,0,1],
-    [1,0,0,0,1,0,1,0,1,0,0,0,0,0,0,1,0,1,0,1],
-    [1,1,1,1,1,0,1,0,1,1,1,1,1,1,0,1,0,1,0,1],
-    [1,0,1,0,0,0,1,0,0,0,0,1,0,1,0,1,0,1,0,1],
-    [1,0,1,0,1,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1],
-    [1,0,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,1],
-    [1,0,1,1,1,1,1,0,0,0,1,1,0,1,0,1,1,1,0,1],
-    [1,0,0,0,0,0,1,1,1,1,1,0,0,1,0,0,0,1,0,1],
-    [1,1,1,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,0],
-    [1,0,0,0,0,0,0,0,1,0,1,1,0,1,0,1,0,1,1,1],
-    [1,0,1,1,1,1,1,1,1,0,1,0,0,0,0,1,0,1,0,1],
-    [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1,1,0,0,0,1],
-    [1,0,0,0,1,1,1,0,1,0,1,0,1,1,0,0,0,1,1,1],
-    [0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
+    [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+    [1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+    [1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+    [1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1],
+    [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
-def solve_maze_backtracking(maze, start, end, app, player_id, delay=20):
-    def is_valid_move(x, y):
-        return 0 <= x < len(maze[0]) and 0 <= y < len(maze) and maze[y][x] == 0
+# Maze Parameters
+start = (1, 1)
+end = (5, 0)
+width = len(maze[0])
+height = len(maze)
 
-    def backtrack(x, y, path):
-        if (x, y) == end:
-            path.append((x, y))
-            return True
-        if is_valid_move(x, y):
-            path.append((x, y))
-            color = "blue" if player_id == 1 else "yellow"  # Different colors for each player
-            app.update_canvas(x, y, color, delay=delay)  # Visualize path exploration with delay
-            maze[y][x] = 2  # Mark as visited
-            for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-                if backtrack(x + dx, y + dy, path):
-                    return True
-            path.pop()  # Backtrack
-            app.update_canvas(x, y, "red", delay=delay)  # Visualize backtracking with delay
-            maze[y][x] = 0  # Unmark if not part of solution path
-        return False
+# Q-Learning Parameters
+alpha = 0.1  # Learning rate
+gamma = 0.9  # Discount factor
+epsilon = 0.2  # Exploration rate
+num_actions = 4  # UP, DOWN, LEFT, RIGHT
 
-    path = []
-    if backtrack(start[0], start[1], path):
-        return True, path
-    return False, []
+# Initialize Q-tables
+agent1_Q_table = np.zeros((width * height, num_actions))
+agent2_Q_table = np.zeros((width * height, num_actions))
 
-class MazeApp:
-    def __init__(self, root, maze):
-        self.root = root
-        self.root.title("Maze Solver")
-        self.canvas = tk.Canvas(self.root, width=500, height=500)
-        self.canvas.pack()
+# Map coordinates to state index
+def state_to_index(x, y, width):
+    return y * width + x
 
-        self.maze = maze
-        self.original_maze = [row[:] for row in self.maze]  # Save the original maze layout
-        self.width = len(maze[0])
-        self.height = len(maze)
-        self.cell_size = 500 // self.width  # Adjust cell size
-        self.start1 = (0, 15)  # Player 1 start position
-        self.start2 = (0, 0)   # Player 2 start position
-        self.end = (self.width - 1, self.height - 7)  # End position
+def index_to_state(index, width):
+    return index % width, index // width
 
-        self.draw_maze()
-        self.solve_button = tk.Button(self.root, text="Solve with Backtracking", command=self.solve_maze_backtracking)
-        self.solve_button.pack()
-        self.reset_button = tk.Button(self.root, text="Reset Maze", command=self.reset_maze)
-        self.reset_button.pack()
+# Get valid moves
+def get_valid_moves(x, y):
+    moves = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # UP, DOWN, LEFT, RIGHT
+    valid_moves = []
+    for i, (dx, dy) in enumerate(moves):
+        new_x, new_y = x + dx, y + dy
+        if 0 <= new_x < width and 0 <= new_y < height and maze[new_y][new_x] == 0:
+            valid_moves.append((i, new_x, new_y))
+    return valid_moves
 
-    def draw_maze(self):
-        self.canvas.delete("all")
-        for y in range(self.height):
-            for x in range(self.width):
-                color = "white" if self.maze[y][x] == 0 else "black"
-                self.canvas.create_rectangle(
-                    x * self.cell_size, y * self.cell_size,
-                    (x + 1) * self.cell_size, (y + 1) * self.cell_size,
-                    fill=color
-                )
-        self.canvas.create_rectangle(
-            self.start1[0] * self.cell_size, self.start1[1] * self.cell_size,
-            (self.start1[0] + 1) * self.cell_size, (self.start1[1] + 1) * self.cell_size,
-            fill="green"
-        )
-        self.canvas.create_rectangle(
-            self.start2[0] * self.cell_size, self.start2[1] * self.cell_size,
-            (self.start2[0] + 1) * self.cell_size, (self.start2[1] + 1) * self.cell_size,
-            fill="orange"
-        )
-        self.canvas.create_rectangle(
-            self.end[0] * self.cell_size, self.end[1] * self.cell_size,
-            (self.end[0] + 1) * self.cell_size, (self.end[1] + 1) * self.cell_size,
-            fill="red"
-        )
+# Q-learning step
+def q_learning_step(Q_table, x, y):
+    state = state_to_index(x, y, width)
+    moves = get_valid_moves(x, y)
 
-    def update_canvas(self, x, y, color, delay=0):
-        self.canvas.create_rectangle(
-            x * self.cell_size, y * self.cell_size,
-            (x + 1) * self.cell_size, (y + 1) * self.cell_size,
-            fill=color
-        )
-        self.canvas.update_idletasks()
-        if delay > 0:
-            self.canvas.after(delay)
+    if not moves:
+        return x, y  # No valid moves
 
-    def solve_maze_backtracking(self):
-        self.maze = [row[:] for row in self.original_maze]  # Reset the maze before solving
-        self.draw_maze()
-        start_time = time.time()  # Start the timer
-
-        # Solve for Player 1 (Blue) path
-        solution_found1, path1 = solve_maze_backtracking(self.maze, self.start1, self.end, self, 1)
-
-        # Now make Player 2 (Yellow) follow the Blue player's path
-        if solution_found1:
-            for x, y in path1:
-                self.update_canvas(x, y, "blue", delay=20)
-            
-            # Player 2 follows the same path
-            for i, (x, y) in enumerate(path1):
-                color = "yellow"
-                self.update_canvas(x, y, color, delay=20)
-                if i < len(path1) - 1:
-                    next_x, next_y = path1[i+1]
-                    self.update_canvas(next_x, next_y, color, delay=20)
-
-            end_time = time.time()  # End the timer
-            elapsed_time = end_time - start_time  # Calculate elapsed time
-            messagebox.showinfo("Maze Solver", f"Both Players Found Solutions!\nTime taken: {elapsed_time:.2f} seconds")
+    if random.random() < epsilon:
+        # Exploration: Choose a random valid action
+        action, new_x, new_y = random.choice(moves)
+    else:
+        # Exploitation: Choose the best action
+        action = np.argmax(Q_table[state])
+        valid_action = [(a, nx, ny) for a, nx, ny in moves if a == action]
+        if valid_action:
+            _, new_x, new_y = valid_action[0]
         else:
-            messagebox.showinfo("Maze Solver", "No Solution Found.")
+            action, new_x, new_y = random.choice(moves)
 
-    def reset_maze(self):
-        self.maze = [row[:] for row in self.original_maze]  # Restore the original maze layout
-        self.draw_maze()
+    # Reward system
+    if (new_x, new_y) == end:
+        reward = 100
+    else:
+        reward = -1
 
-    def run(self):
-        self.root.mainloop()
+    # Q-learning update
+    next_state = state_to_index(new_x, new_y, width)
+    Q_table[state, action] += alpha * (
+        reward + gamma * np.max(Q_table[next_state]) - Q_table[state, action]
+    )
+    return new_x, new_y
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    maze_app = MazeApp(root, maze)
-    maze_app.run()
+# Train agents for episodes
+def train_agents(episodes, max_steps_per_episode):
+    for episode in range(episodes):
+        x1, y1 = start
+        x2, y2 = (1, 1)
+        steps = 0
+
+        while steps < max_steps_per_episode:
+            if (x1, y1) == end or (x2, y2) == end:
+                break  # Stop if either agent reaches the end
+
+            x1, y1 = q_learning_step(agent1_Q_table, x1, y1)
+            x2, y2 = q_learning_step(agent2_Q_table, x2, y2)
+            steps += 1
+
+        print(f"Episode {episode + 1}: Agent 1 at {x1, y1}, Agent 2 at {x2, y2}")
+
+# Save Q-tables
+def save_q_tables():
+    with open("agent1_Q_table.pkl", "wb") as f:
+        pickle.dump(agent1_Q_table, f)
+    with open("agent2_Q_table.pkl", "wb") as f:
+        pickle.dump(agent2_Q_table, f)
+
+# Render the maze and agents using Tkinter
+def render_maze(agent1_pos, agent2_pos):
+    window = tk.Tk()
+    window.title("Maze Solver")
+
+    canvas = tk.Canvas(window, width=width * 30, height=height * 30)
+    canvas.pack()
+
+    # Draw the maze
+    for y in range(height):
+        for x in range(width):
+            color = "white" if maze[y][x] == 0 else "black"
+            canvas.create_rectangle(x * 30, y * 30, (x + 1) * 30, (y + 1) * 30, fill=color)
+
+    # Draw Agent 1
+    ax1, ay1 = agent1_pos
+    canvas.create_oval(ax1 * 30 + 5, ay1 * 30 + 5, ax1 * 30 + 25, ay1 * 30 + 25, fill="blue")
+
+    # Draw Agent 2
+    ax2, ay2 = agent2_pos
+    canvas.create_oval(ax2 * 30 + 5, ay2 * 30 + 5, ax2 * 30 + 25, ay2 * 30 + 25, fill="red")
+
+    # Game over flag
+    game_over = False
+
+    def update():
+        nonlocal agent1_pos, agent2_pos, game_over
+
+        if game_over:
+            return  # Stop the update loop
+
+        if agent1_pos == end:
+            if not game_over:
+                messagebox.showinfo("Success", "Agent 1 has reached the end!")
+                game_over = True
+            return  # Stop further updates in this frame
+        if agent2_pos == end:
+            if not game_over:
+                messagebox.showinfo("Success", "Agent 2 has reached the end!")
+                game_over = True
+            return  # Stop further updates in this frame
+
+        if not game_over:
+            new_agent1_pos = q_learning_step(agent1_Q_table, agent1_pos[0], agent1_pos[1])
+            new_agent2_pos = q_learning_step(agent2_Q_table, agent2_pos[0], agent2_pos[1])
+
+            if new_agent1_pos != agent1_pos:
+                agent1_pos = new_agent1_pos
+            if new_agent2_pos != agent2_pos:
+                agent2_pos = new_agent2_pos
+
+            canvas.delete("all")
+            for y in range(height):
+                for x in range(width):
+                    color = "white" if maze[y][x] == 0 else "black"
+                    canvas.create_rectangle(x * 30, y * 30, (x + 1) * 30, (y + 1) * 30, fill=color)
+
+            ax1, ay1 = agent1_pos
+            canvas.create_oval(ax1 * 30 + 5, ay1 * 30 + 5, ax1 * 30 + 25, ay1 * 30 + 25, fill="blue")
+
+            ax2, ay2 = agent2_pos
+            canvas.create_oval(ax2 * 30 + 5, ay2 * 30 + 5, ax2 * 30 + 25, ay2 * 30 + 25, fill="red")
+
+        if not game_over:
+            window.after(100, update)  # Schedule the next update only if not game over
+
+    window.after(100, update)
+    window.mainloop()
+
+# Train and render
+train_agents(episodes=1000, max_steps_per_episode=200)
+render_maze(agent1_pos=start, agent2_pos=(1, 1))
